@@ -1,4 +1,4 @@
-name: Fetch V2Nodes Subscriptions
+name: Update Tested Subscriptions
 
 on:
   schedule:
@@ -11,7 +11,7 @@ permissions:
 jobs:
   run:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 350
     steps:
       - uses: actions/checkout@v4
         with:
@@ -28,3 +28,22 @@ jobs:
 
       - name: Run script
         run: python update_configs.py
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          
+          for file in in_configs.txt us_configs.txt sg_configs.txt fr_configs.txt tested_configs.db; do
+            if [ -f "$file" ]; then
+              git add "$file"
+            fi
+          done
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "🔄 Update tested configs and purge dead nodes"
+            git pull --rebase origin main
+            git push origin main
+          fi
